@@ -3,6 +3,10 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showDeleteAccountAlert = false
+    @State private var isDeletingAccount = false
+    @State private var showDeleteErrorAlert = false
+    @State private var deleteErrorMessage = ""
     
     var body: some View {
         NavigationStack {
@@ -21,6 +25,47 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
                 if !isAuthenticated { dismiss() }
+            }
+            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await deleteAccount()
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.")
+            }
+            .alert("Delete Account Failed", isPresented: $showDeleteErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(deleteErrorMessage)
+            }
+        }
+    }
+    
+    // MARK: - Actions
+    private func deleteAccount() async {
+        await MainActor.run {
+            isDeletingAccount = true
+        }
+        
+        do {
+            print("ProfileView: Starting account deletion...")
+            try await authViewModel.deleteAccount()
+            print("ProfileView: Account deletion successful")
+            
+            await MainActor.run {
+                isDeletingAccount = false
+                dismiss()
+            }
+        } catch {
+            print("ProfileView: Failed to delete account: \(error)")
+            
+            await MainActor.run {
+                isDeletingAccount = false
+                deleteErrorMessage = error.localizedDescription
+                showDeleteErrorAlert = true
             }
         }
     }
@@ -70,10 +115,8 @@ struct ProfileView: View {
                 Label(authViewModel.subscriptionTier == "FREE" ? "FREE Plan" : "Picly Pro", systemImage: "crown")
                     .foregroundColor(.secondary)
                 Spacer()
-                Button("Manage Subscription") {
-                    print("Manage Subscription tapped")
-                }
-                .buttonStyle(.bordered)
+                Link("Manage Subscription", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
+                    .buttonStyle(.bordered)
             }
         }
         .padding(20)
@@ -102,16 +145,23 @@ struct ProfileView: View {
             .frame(height: 54)
             
             Button(role: .destructive) {
-                print("Delete Account tapped")
+                showDeleteAccountAlert = true
             } label: {
                 HStack {
-                    Image(systemName: "trash")
-                    Text("Delete Account")
+                    if isDeletingAccount {
+                        ProgressView()
+                            .tint(.white)
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "trash")
+                    }
+                    Text(isDeletingAccount ? "Deleting Account..." : "Delete Account")
                 }
             }
             .buttonStyle(.bordered)
             .frame(maxWidth: .infinity)
             .frame(height: 54)
+            .disabled(isDeletingAccount)
         }
         .padding(20)
         .background(

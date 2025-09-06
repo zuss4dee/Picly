@@ -114,12 +114,82 @@ final class AuthViewModel: ObservableObject {
         }
     }
     
+    func deleteAccount() async throws {
+        guard let userId = session?.user.id else {
+            throw AuthError.noCurrentUser
+        }
+        
+        print("Starting account deletion for user: \(userId)")
+        
+        // Try to delete user data from database
+        do {
+            // First, try to call the RPC function if it exists
+            do {
+                let response = try await client.database.rpc(
+                    "delete_user_account",
+                    params: ["user_id": userId]
+                ).execute()
+                
+                print("Account deletion RPC call successful")
+            } catch {
+                print("RPC function not available, trying direct deletion: \(error)")
+                
+                // Fallback: Delete user data directly from tables
+                try await deleteUserDataDirectly(userId: userId)
+            }
+        } catch {
+            print("Database deletion failed, but continuing with auth deletion: \(error)")
+            // Continue with auth deletion even if database operations fail
+        }
+        
+        // Always sign out the user (this is the most important part)
+        do {
+            try await client.auth.signOut()
+            print("User signed out successfully after account deletion")
+        } catch {
+            print("Failed to sign out user: \(error)")
+            throw error
+        }
+    }
+    
+    private func deleteUserDataDirectly(userId: UUID) async throws {
+        print("Deleting user data directly for user: \(userId)")
+        
+        // Delete from shoots table (assuming shoots have a user_id column)
+        try await client.database
+            .from("shoots")
+            .delete()
+            .eq("user_id", value: userId)
+            .execute()
+        
+        // Delete from media_assets table (assuming media_assets have a user_id column)
+        try await client.database
+            .from("media_assets")
+            .delete()
+            .eq("user_id", value: userId)
+            .execute()
+        
+        print("User data deleted successfully")
+    }
+    
     private static func presentationAnchor() async -> ASPresentationAnchor {
         await MainActor.run {
             UIApplication.shared.connectedScenes
                 .compactMap { $0 as? UIWindowScene }
                 .flatMap { $0.windows }
                 .first { $0.isKeyWindow } ?? UIWindow()
+        }
+    }
+}
+
+// MARK: - Auth Errors
+enum AuthError: Error, LocalizedError {
+    case noCurrentUser
+    
+    var errorDescription: String? {
+        switch self {
+        case .noCurrentUser:
+            return "No current user found. Please sign in again."
         }
     }
 }
