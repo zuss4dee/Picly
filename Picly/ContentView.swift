@@ -6,19 +6,31 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var authViewModel: AuthViewModel
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if authViewModel.isAuthenticated {
+            NavigationStack {
+                TabView {
+                    ShootsDashboardView(modelContext: modelContext)
+                        .tabItem { Image(systemName: "folder"); Text("Projects") }
+                    SettingsView()
+                        .tabItem { Image(systemName: "gearshape"); Text("Settings") }
+                }
+                .tint(.blue)
+            }
+        } else {
+            AuthView()
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(AuthViewModel())
+        .modelContainer(for: [Shoot.self, MediaAsset.self])
 }

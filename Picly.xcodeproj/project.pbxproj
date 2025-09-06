@@ -6,13 +6,32 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DE30FB442E683FC600F41D04 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = DE30FB432E683FC600F41D04 /* SuperwallKit */; };
+		DE30FB492E68649300F41D04 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = DE30FB482E68649300F41D04 /* Supabase */; };
+		DE30FB692E6AE65200F41D04 /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = DE30FB682E6AE65200F41D04 /* Zip */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		DE30FB1A2E66594000F41D04 /* Picly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Picly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DE30FB502E68971000F41D04 /* Exceptions for "Picly" folder in "Picly" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DE30FB192E66594000F41D04 /* Picly */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DE30FB1C2E66594000F41D04 /* Picly */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DE30FB502E68971000F41D04 /* Exceptions for "Picly" folder in "Picly" target */,
+			);
 			path = Picly;
 			sourceTree = "<group>";
 		};
@@ -23,6 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE30FB692E6AE65200F41D04 /* Zip in Frameworks */,
+				DE30FB492E68649300F41D04 /* Supabase in Frameworks */,
+				DE30FB442E683FC600F41D04 /* SuperwallKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +87,9 @@
 			);
 			name = Picly;
 			packageProductDependencies = (
+				DE30FB432E683FC600F41D04 /* SuperwallKit */,
+				DE30FB482E68649300F41D04 /* Supabase */,
+				DE30FB682E6AE65200F41D04 /* Zip */,
 			);
 			productName = Picly;
 			productReference = DE30FB1A2E66594000F41D04 /* Picly.app */;
@@ -94,6 +119,11 @@
 			);
 			mainGroup = DE30FB112E66594000F41D04;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DE30FB422E683FC600F41D04 /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
+				DE30FB472E68649200F41D04 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				DE30FB672E6AE65200F41D04 /* XCRemoteSwiftPackageReference "Zip" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DE30FB1B2E66594000F41D04 /* Products */;
 			projectDirPath = "";
@@ -253,6 +283,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Picly/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Picly needs camera access to capture photos directly into your Shoot.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Picly needs microphone access to record audio while capturing video.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Picly needs permission to save exported photos and videos to your Photos library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Picly needs access to your Photos library to import and manage selected media.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -263,7 +298,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
@@ -272,10 +307,11 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 2.5;
 			};
 			name = Debug;
@@ -292,6 +328,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Picly/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Picly needs camera access to capture photos directly into your Shoot.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Picly needs microphone access to record audio while capturing video.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Picly needs permission to save exported photos and videos to your Photos library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Picly needs access to your Photos library to import and manage selected media.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -302,7 +343,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
@@ -311,10 +352,11 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 2.5;
 			};
 			name = Release;
@@ -341,6 +383,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DE30FB422E683FC600F41D04 /* XCRemoteSwiftPackageReference "Superwall-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/superwall/Superwall-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.7.0;
+			};
+		};
+		DE30FB472E68649200F41D04 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+		DE30FB672E6AE65200F41D04 /* XCRemoteSwiftPackageReference "Zip" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/marmelroy/Zip";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DE30FB432E683FC600F41D04 /* SuperwallKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DE30FB422E683FC600F41D04 /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
+			productName = SuperwallKit;
+		};
+		DE30FB482E68649300F41D04 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DE30FB472E68649200F41D04 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		DE30FB682E6AE65200F41D04 /* Zip */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DE30FB672E6AE65200F41D04 /* XCRemoteSwiftPackageReference "Zip" */;
+			productName = Zip;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DE30FB122E66594000F41D04 /* Project object */;
 }
