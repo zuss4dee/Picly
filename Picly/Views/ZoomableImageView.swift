@@ -11,12 +11,36 @@ struct ZoomableImageView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            ScrollView([.horizontal, .vertical], showsIndicators: false) {
+            if currentZoom > 1.0 {
+                // Only use ScrollView when zoomed in
+                ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                        .scaleEffect(currentZoom)
+                        .gesture(
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    let delta = value / lastZoom
+                                    lastZoom = value
+                                    let newZoom = currentZoom * delta
+                                    currentZoom = min(max(newZoom, minZoom), maxZoom)
+                                }
+                                .onEnded { _ in
+                                    lastZoom = 1.0
+                                }
+                        )
+                }
+                .clipped()
+            } else {
+                // When not zoomed, use a simple image view with only magnification gesture
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                     .scaleEffect(currentZoom)
+                    .clipped()
                     .gesture(
                         MagnificationGesture()
                             .onChanged { value in
@@ -30,9 +54,9 @@ struct ZoomableImageView: View {
                             }
                     )
             }
-            .scrollDisabled(currentZoom <= 1.0)
         }
         .background(Color.black)
+        .clipped()
         .onAppear {
             // Reset zoom when image changes
             currentZoom = 1.0

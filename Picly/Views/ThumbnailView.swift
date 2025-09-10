@@ -14,23 +14,50 @@ struct ThumbnailView: View {
                         .aspectRatio(contentMode: .fill)
                 } else if isLoading {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.2))
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(.systemGray6), Color(.systemGray5)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                         .overlay(
-                            ProgressView()
-                                .scaleEffect(0.8)
+                            VStack(spacing: 8) {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                    .tint(.blue)
+                                
+                                Text("Loading...")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
                         )
                 } else {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(.systemGray6), Color(.systemGray5)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                         .overlay(
-                            Image(systemName: asset.isVideo ? "video" : "photo")
-                                .foregroundColor(.gray)
+                            VStack(spacing: 4) {
+                                Image(systemName: asset.isVideo ? "video.fill" : "photo.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.secondary)
+                                
+                                Text(asset.isVideo ? "Video" : "Photo")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
                         )
                 }
             }
             .frame(width: 110, height: 110)
             .clipped()
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
             
             // Video indicator
             if asset.isVideo {
@@ -39,10 +66,14 @@ struct ThumbnailView: View {
                     HStack {
                         Spacer()
                         Image(systemName: "play.circle.fill")
+                            .font(.system(size: 20))
                             .foregroundColor(.white)
-                            .background(Color.black.opacity(0.6))
-                            .clipShape(Circle())
-                            .padding(4)
+                            .background(
+                                Circle()
+                                    .fill(Color.black.opacity(0.7))
+                                    .frame(width: 24, height: 24)
+                            )
+                            .padding(6)
                     }
                 }
             }
@@ -55,16 +86,32 @@ struct ThumbnailView: View {
     private func loadOriginalImage() {
         Task {
             do {
-                let fileURL = URL(fileURLWithPath: asset.localFilePath)
-                let imageData = try Data(contentsOf: fileURL)
-                if let image = UIImage(data: imageData) {
-                    await MainActor.run {
-                        self.originalImage = image
-                        self.isLoading = false
+                // For videos, use the pre-generated thumbnail data
+                if asset.isVideo {
+                    if let thumbnailData = asset.thumbnailData,
+                       let thumbnailImage = UIImage(data: thumbnailData) {
+                        await MainActor.run {
+                            self.originalImage = thumbnailImage
+                            self.isLoading = false
+                        }
+                    } else {
+                        await MainActor.run {
+                            self.isLoading = false
+                        }
                     }
                 } else {
-                    await MainActor.run {
-                        self.isLoading = false
+                    // For photos, load the original image file
+                    let fileURL = URL(fileURLWithPath: asset.localFilePath)
+                    let imageData = try Data(contentsOf: fileURL)
+                    if let image = UIImage(data: imageData) {
+                        await MainActor.run {
+                            self.originalImage = image
+                            self.isLoading = false
+                        }
+                    } else {
+                        await MainActor.run {
+                            self.isLoading = false
+                        }
                     }
                 }
             } catch {

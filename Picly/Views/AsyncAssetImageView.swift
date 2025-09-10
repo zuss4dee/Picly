@@ -15,14 +15,17 @@ struct AsyncAssetImageView: View {
                     .scaledToFill()
             }
             
-            // Asynchronously load the full-resolution image on top
-            AsyncImage(url: URL(fileURLWithPath: asset.localFilePath)) { image in
-                image
-                    .resizable()
-                    .scaledToFill()
-            } placeholder: {
-                // While the full-res image is loading, the thumbnail underneath will show.
-                EmptyView()
+            // For photos, asynchronously load the full-resolution image on top
+            // For videos, just show the thumbnail (no full-res loading needed)
+            if !asset.isVideo {
+                AsyncImage(url: URL(fileURLWithPath: asset.localFilePath)) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    // While the full-res image is loading, the thumbnail underneath will show.
+                    EmptyView()
+                }
             }
         }
     }

@@ -12,6 +12,8 @@ struct ShootDetailView: View {
     @State private var showPhotosPicker = false
     @State private var selectedPickerItems: [PhotosPickerItem] = []
     @State private var isImporting = false
+    @State private var importProgress: Double = 0.0
+    @State private var importCount: Int = 0
     
     // Selection state
     @State private var isSelectionMode = false
@@ -41,40 +43,107 @@ struct ShootDetailView: View {
     }
     
     private var loadingView: some View {
-        VStack {
-            Spacer(minLength: 40)
-            ProgressView(isImporting ? "Importing photos..." : "Loading photos...")
+        VStack(spacing: 24) {
+            Spacer()
+            
+            // Animated loading indicator
+            ZStack {
+                Circle()
+                    .stroke(Color(.systemGray5), lineWidth: 6)
+                    .frame(width: 80, height: 80)
+                
+                Circle()
+                    .trim(from: 0, to: 0.7)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                    )
+                    .frame(width: 80, height: 80)
+                    .rotationEffect(.degrees(isImporting ? 360 : 0))
+                    .animation(
+                        .linear(duration: 1.0).repeatForever(autoreverses: false),
+                        value: isImporting
+                    )
+            }
+            
+            VStack(spacing: 8) {
+                Text(isImporting ? "Importing Photos..." : "Loading Photos...")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                
+                Text(isImporting ? "Please wait while we process your photos" : "Getting your photos ready")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
     }
     
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "photo.on.rectangle")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
+        VStack(spacing: 32) {
+            Spacer()
             
-            Text("No photos yet")
-                .font(.title2)
-                .fontWeight(.medium)
+            // Enhanced empty state icon
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.blue.opacity(0.1), .purple.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                
+                Image(systemName: "photo.on.rectangle")
+                    .font(.system(size: 50, weight: .light))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
             
-            Text("Add photos from your library or take new ones")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+            VStack(spacing: 16) {
+                Text("No Photos Yet")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Text("Add photos from your library or take new ones to get started")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .padding(.horizontal, 40)
+            }
+            
+            Spacer()
         }
-        .padding()
-        .frame(maxWidth: .infinity, minHeight: 300)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
     }
     
     private var photosGridView: some View {
-        LazyVGrid(columns: gridColumns, spacing: 8) {
+        LazyVGrid(columns: gridColumns, spacing: 12) {
             ForEach(assets) { asset in
                 photoItemView(for: asset)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 20)
     }
     
     @ViewBuilder
@@ -200,7 +269,7 @@ struct ShootDetailView: View {
                         Button(action: {
                             showPhotosPicker = true
                         }) {
-                            Label("Import from Library", systemImage: "photo.on.rectangle")
+                            Label("Import Photos", systemImage: "photo.on.rectangle")
                         }
                         
                         if !assets.isEmpty {
@@ -237,38 +306,160 @@ struct ShootDetailView: View {
         }
         .sheet(isPresented: $showPhotosPicker) {
             NavigationView {
-                VStack(spacing: 20) {
-                    Image(systemName: "photo.on.rectangle")
-                        .font(.system(size: 60))
-                        .foregroundColor(.blue)
+                ZStack {
+                    // Background gradient
+                    LinearGradient(
+                        colors: [Color(.systemBackground), Color(.secondarySystemBackground)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
                     
-                    Text("Select Photos & Videos")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                    
-                    Text("Choose up to 10 photos or videos from your library")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                    
-                    PhotosPicker(selection: $selectedPickerItems, maxSelectionCount: 10, matching: .any(of: [.images, .videos])) {
-                        Text("Open Photo Library")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(10)
+                    if isImporting {
+                        // Enhanced loading screen
+                        VStack(spacing: 32) {
+                            // Animated progress circle
+                            ZStack {
+                                Circle()
+                                    .stroke(Color(.systemGray5), lineWidth: 8)
+                                    .frame(width: 120, height: 120)
+                                
+                                Circle()
+                                    .trim(from: 0, to: importProgress)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                                    )
+                                    .frame(width: 120, height: 120)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(.easeInOut(duration: 0.3), value: importProgress)
+                                
+                                VStack(spacing: 4) {
+                                    Text("\(Int(importProgress * 100))%")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("\(importCount)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            VStack(spacing: 16) {
+                                Text("Importing Photos")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Processing your photos...")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            
+                            // Progress bar
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Text("Progress")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text("\(importCount) of \(selectedPickerItems.count)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                ProgressView(value: importProgress, total: 1.0)
+                                    .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                                    .scaleEffect(y: 2)
+                            }
+                            .padding(.horizontal, 40)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        // Enhanced photo selection screen
+                        VStack(spacing: 40) {
+                            Spacer()
+                            
+                            // Icon with background
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.blue.opacity(0.1), .purple.opacity(0.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 140, height: 140)
+                                
+                                Image(systemName: "photo.on.rectangle")
+                                    .font(.system(size: 50, weight: .light))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            }
+                            
+                            VStack(spacing: 16) {
+                                Text("Select Photos")
+                                    .font(.largeTitle)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Choose up to 20 photos from your library to add to this shoot")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(3)
+                                    .padding(.horizontal, 20)
+                            }
+                            
+                            // Enhanced button
+                            PhotosPicker(selection: $selectedPickerItems, maxSelectionCount: 20, matching: .images) {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "photo.on.rectangle")
+                                        .font(.system(size: 18, weight: .medium))
+                                    
+                                    Text("Open Photo Library")
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                            }
+                            .padding(.horizontal, 40)
+                            
+                            Spacer()
+                        }
                     }
                 }
-                .padding()
-                .navigationTitle("Import Media")
+                .navigationTitle("Import Photos")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Cancel") {
                             showPhotosPicker = false
                         }
+                        .foregroundColor(.blue)
                     }
                 }
             }
@@ -317,31 +508,23 @@ struct ShootDetailView: View {
         print("🔄 Loading assets for shoot: \(shoot.name)")
         isLoading = true
         Task {
-            do {
-                let fetchedAssets = shoot.mediaAssets
-                print("📁 Fetched \(fetchedAssets.count) assets from DataManager")
-                await MainActor.run {
-                    self.assets = fetchedAssets
-                    self.isLoading = false
-                    print("✅ Updated UI with \(self.assets.count) assets")
-                }
-            } catch {
-                await MainActor.run {
-                    self.isLoading = false
-                }
-                print("❌ Failed to load assets: \(error)")
+            let fetchedAssets = shoot.mediaAssets
+            print("📁 Fetched \(fetchedAssets.count) assets from DataManager")
+            await MainActor.run {
+                self.assets = fetchedAssets
+                self.isLoading = false
+                print("✅ Updated UI with \(self.assets.count) assets")
             }
         }
     }
     
     private func saveMediaToShoot(_ mediaResult: MediaResult) async {
         do {
-            let asset: MediaAsset
             switch mediaResult {
             case .image(let image):
-                asset = try await dataManager.createMediaAsset(from: image, for: shoot)
+                _ = try await dataManager.createMediaAsset(from: image, for: shoot)
             case .video(let videoURL):
-                asset = try await dataManager.createMediaAsset(from: videoURL, for: shoot)
+                _ = try await dataManager.createMediaAsset(from: videoURL, for: shoot)
             }
             
             await MainActor.run {
@@ -355,7 +538,7 @@ struct ShootDetailView: View {
     }
     
     private func importSelectedMedia(_ items: [PhotosPickerItem]) async {
-        print("📥 Starting to import \(items.count) media items")
+        print("📥 Starting to import \(items.count) photos")
         guard !items.isEmpty else { 
             print("❌ No items to import")
             return 
@@ -364,31 +547,44 @@ struct ShootDetailView: View {
         // Show loading state
         await MainActor.run {
             self.isImporting = true
+            self.importProgress = 0.0
+            self.importCount = 0
         }
         
+        // Process photos sequentially to avoid Sendable issues
         var importedAssets: [MediaAsset] = []
         
         for (index, item) in items.enumerated() {
-            print("📄 Processing item \(index + 1) of \(items.count)")
+            print("📄 Processing photo \(index + 1) of \(items.count)")
             do {
-                // Try to load as image first
+                // Load as image data only
                 if let data = try await item.loadTransferable(type: Data.self),
                    let image = UIImage(data: data) {
                     print("✅ Successfully loaded image data: \(image.size.width)x\(image.size.height)")
-                    let asset = try await dataManager.createMediaAsset(from: image, for: shoot)
-                    importedAssets.append(asset)
-                }
-                // If not an image, try to load as video URL
-                else if let videoURL = try await item.loadTransferable(type: URL.self) {
-                    print("✅ Successfully loaded video URL, creating MediaAsset...")
-                    let asset = try await dataManager.createMediaAsset(from: videoURL, for: shoot)
+                    let asset = try await dataManager.createMediaAssetOptimized(from: image, for: shoot)
                     importedAssets.append(asset)
                 } else {
-                    print("❌ Failed to load item as either image data or video URL")
+                    print("❌ Failed to load item as image data")
                 }
             } catch {
-                print("❌ Failed to import media item \(index + 1): \(error)")
+                print("❌ Failed to import photo \(index + 1): \(error)")
             }
+            
+            // Update progress
+            await MainActor.run {
+                self.importCount += 1
+                self.importProgress = Double(self.importCount) / Double(items.count)
+            }
+        }
+        
+        print("📊 Successfully imported \(importedAssets.count) out of \(items.count) photos")
+        
+        // Batch save all assets at once for better performance
+        do {
+            try dataManager.batchSaveAssets(importedAssets)
+            print("💾 Batch saved \(importedAssets.count) assets to database")
+        } catch {
+            print("❌ Failed to batch save assets: \(error)")
         }
         
         // Update UI once at the end
@@ -455,11 +651,9 @@ struct ShootDetailView: View {
     private func deleteAsset(_ asset: MediaAsset) async {
         print("🗑️ Deleting asset: \(asset.fileName)")
         do {
-            try await dataManager.deleteMediaAsset(asset)
-            await MainActor.run {
-                self.assets = self.shoot.mediaAssets
-                print("✅ Successfully deleted asset. Remaining assets: \(self.assets.count)")
-            }
+            try dataManager.deleteMediaAsset(asset)
+            self.assets = self.shoot.mediaAssets
+            print("✅ Successfully deleted asset. Remaining assets: \(self.assets.count)")
         } catch {
             print("❌ Failed to delete asset: \(error)")
         }
@@ -495,19 +689,17 @@ struct ShootDetailView: View {
         
         for asset in assetsToDelete {
             do {
-                try await dataManager.deleteMediaAsset(asset)
+                try dataManager.deleteMediaAsset(asset)
                 print("✅ Deleted: \(asset.fileName)")
             } catch {
                 print("❌ Failed to delete \(asset.fileName): \(error)")
             }
         }
         
-        await MainActor.run {
-            self.assets = self.shoot.mediaAssets
-            self.selectedAssets.removeAll()
-            self.isSelectionMode = false
-            print("🔄 Batch delete complete. Remaining assets: \(self.assets.count)")
-        }
+        self.assets = self.shoot.mediaAssets
+        self.selectedAssets.removeAll()
+        self.isSelectionMode = false
+        print("🔄 Batch delete complete. Remaining assets: \(self.assets.count)")
     }
     
     private func shareSelectedAssets() {

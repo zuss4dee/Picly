@@ -57,7 +57,7 @@ struct SettingsView: View {
     
     // MARK: - Account Card
     private var accountCard: some View {
-        NavigationLink(destination: ProfileView().environmentObject(authViewModel)) {
+        NavigationLink(destination: ProfileView(dataManager: DataManager(modelContext: modelContext)).environmentObject(authViewModel)) {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()

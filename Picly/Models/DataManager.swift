@@ -52,6 +52,42 @@ class DataManager: ObservableObject {
         try modelContext.save()
     }
     
+    func deleteAllData() throws {
+        print("DataManager: Starting complete data deletion...")
+        
+        // Fetch all shoots
+        let shoots = try fetchShoots()
+        print("DataManager: Found \(shoots.count) shoots to delete")
+        
+        // Delete all shoots (this will also delete associated media assets)
+        for shoot in shoots {
+            try deleteShoot(shoot)
+        }
+        
+        // Fetch any remaining media assets (in case some weren't associated with shoots)
+        let mediaAssets = try fetchAllMediaAssets()
+        print("DataManager: Found \(mediaAssets.count) remaining media assets to delete")
+        
+        for asset in mediaAssets {
+            let path = asset.localFilePath
+            if !path.isEmpty {
+                let url = URL(fileURLWithPath: path)
+                if FileManager.default.fileExists(atPath: url.path) {
+                    try? FileManager.default.removeItem(at: url)
+                }
+            }
+            modelContext.delete(asset)
+        }
+        
+        try modelContext.save()
+        print("DataManager: All data deleted successfully")
+    }
+    
+    private func fetchAllMediaAssets() throws -> [MediaAsset] {
+        let descriptor = FetchDescriptor<MediaAsset>()
+        return try modelContext.fetch(descriptor)
+    }
+    
     func updateShoot(_ shoot: Shoot) throws {
         shoot.updatedAt = Date()
         try modelContext.save()
@@ -127,6 +163,60 @@ class DataManager: ObservableObject {
         
         
         return asset
+    }
+    
+    // MARK: - Optimized MediaAsset Creation
+    func createMediaAssetOptimized(from image: UIImage, for shoot: Shoot) async throws -> MediaAsset {
+        // Generate a unique filename
+        let fileName = "\(UUID().uuidString).jpg"
+        
+        // Get the documents directory
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let shootDirectory = documentsPath.appendingPathComponent("Shoots").appendingPathComponent(shoot.id.uuidString)
+        
+        // Create shoot directory if it doesn't exist
+        try FileManager.default.createDirectory(at: shootDirectory, withIntermediateDirectories: true)
+        
+        let fileURL = shootDirectory.appendingPathComponent(fileName)
+        
+        // Use optimized compression quality for faster processing
+        // 0.85 provides excellent quality while being much faster than 1.0
+        guard let imageData = image.jpegData(compressionQuality: 0.85) else {
+            throw NSError(domain: "DataManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG data"])
+        }
+        
+        // Save image to file
+        try imageData.write(to: fileURL)
+        
+        // Create thumbnail with optimized size and compression
+        let thumbnailSize = CGSize(width: 200, height: 200) // Smaller thumbnail for faster generation
+        let thumbnail = image.thumbnailOptimized(size: thumbnailSize)
+        let thumbnailData = thumbnail.jpegData(compressionQuality: 0.7) // Lower quality for faster processing
+        
+        // Create MediaAsset
+        let asset = MediaAsset(
+            fileName: fileName,
+            fileSize: Int64(imageData.count),
+            mediaType: .photo,
+            localFilePath: fileURL.path
+        )
+        
+        // Set thumbnail data
+        asset.thumbnailData = thumbnailData
+        
+        // Add the asset to the shoot's mediaAssets array
+        shoot.addMediaAsset(asset)
+        
+        modelContext.insert(asset)
+        // Note: We'll batch save all assets at once in the calling function
+        
+        return asset
+    }
+    
+    // MARK: - Batch Save for Multiple Assets
+    func batchSaveAssets(_ assets: [MediaAsset]) throws {
+        // Save all assets at once instead of individual saves
+        try modelContext.save()
     }
     
     func createMediaAsset(from videoURL: URL, for shoot: Shoot) async throws -> MediaAsset {
@@ -247,8 +337,9 @@ class DataManager: ObservableObject {
 // MARK: - UIImage Extension
 extension UIImage {
     func resized(to size: CGSize) -> UIImage {
+        // Use optimized rendering for better performance
         let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { _ in
+        return renderer.image { context in
             // Maintain aspect ratio
             let aspectRatio = self.size.width / self.size.height
             let targetAspectRatio = size.width / size.height
@@ -266,7 +357,27 @@ extension UIImage {
                 drawRect = CGRect(x: (size.width - newWidth) / 2, y: 0, width: newWidth, height: newHeight)
             }
             
+            // Use optimized drawing with interpolation quality
+            context.cgContext.interpolationQuality = .medium
             self.draw(in: drawRect)
+        }
+    }
+    
+    // Optimized thumbnail generation for faster processing
+    func thumbnailOptimized(size: CGSize) -> UIImage {
+        // For very large images, first scale down to a reasonable size before final resize
+        let maxDimension: CGFloat = 800
+        let scale = min(maxDimension / max(self.size.width, self.size.height), 1.0)
+        
+        if scale < 1.0 {
+            let intermediateSize = CGSize(
+                width: self.size.width * scale,
+                height: self.size.height * scale
+            )
+            let intermediateImage = self.resized(to: intermediateSize)
+            return intermediateImage.resized(to: size)
+        } else {
+            return self.resized(to: size)
         }
     }
 }

@@ -100,7 +100,25 @@ final class AuthViewModel: ObservableObject {
             _ = try await client.auth.signIn(email: email, password: password)
             // Auth state listener will update session/isAuthenticated
         } catch {
-            throw error
+            // Debug: Print the actual error to see what we're getting
+            print("🔍 Sign-in error: \(error)")
+            print("🔍 Error localized description: \(error.localizedDescription)")
+            
+            // Check if it's the specific "Invalid login credentials" error
+            if let authError = error as? AuthError {
+                throw authError
+            } else if error.localizedDescription.contains("Invalid login credentials") {
+                throw AuthError.userNotFound
+            } else if error.localizedDescription.contains("Email not confirmed") ||
+                      error.localizedDescription.contains("email_not_confirmed") ||
+                      error.localizedDescription.contains("Email not confirmed") ||
+                      error.localizedDescription.contains("email address not confirmed") ||
+                      error.localizedDescription.contains("Please confirm your email") {
+                throw AuthError.emailNotConfirmed
+            } else {
+                // For all other errors, throw a generic user-friendly error
+                throw AuthError.genericSignInError
+            }
         }
     }
 
@@ -115,62 +133,26 @@ final class AuthViewModel: ObservableObject {
     }
     
     func deleteAccount() async throws {
-        guard let userId = session?.user.id else {
-            throw AuthError.noCurrentUser
-        }
-        
-        print("Starting account deletion for user: \(userId)")
-        
-        // Try to delete user data from database
+        print("AuthViewModel: deleteAccount() function started.")
         do {
-            // First, try to call the RPC function if it exists
-            do {
-                let response = try await client.database.rpc(
-                    "delete_user_account",
-                    params: ["user_id": userId]
-                ).execute()
-                
-                print("Account deletion RPC call successful")
-            } catch {
-                print("RPC function not available, trying direct deletion: \(error)")
-                
-                // Fallback: Delete user data directly from tables
-                try await deleteUserDataDirectly(userId: userId)
-            }
-        } catch {
-            print("Database deletion failed, but continuing with auth deletion: \(error)")
-            // Continue with auth deletion even if database operations fail
-        }
-        
-        // Always sign out the user (this is the most important part)
-        do {
+            print("AuthViewModel: Attempting to call RPC 'delete_user' on Supabase...")
+            _ = try client.rpc("delete_user")
+            print("✅ SUCCESS: RPC 'delete_user' was called without error. The auth state listener should now handle the logout.")
+            
+            // The RPC should trigger the auth state listener to sign out the user
+            // But let's also explicitly sign out to ensure it happens
+            print("AuthViewModel: Explicitly signing out user...")
             try await client.auth.signOut()
-            print("User signed out successfully after account deletion")
+            print("✅ SUCCESS: User signed out successfully after account deletion")
+            
         } catch {
-            print("Failed to sign out user: \(error)")
+            print("❌ FATAL ERROR in deleteAccount(): The RPC call failed.")
+            print("   Error Details: \(error)")
+            print("   Localized Description: \(error.localizedDescription)")
             throw error
         }
     }
     
-    private func deleteUserDataDirectly(userId: UUID) async throws {
-        print("Deleting user data directly for user: \(userId)")
-        
-        // Delete from shoots table (assuming shoots have a user_id column)
-        try await client.database
-            .from("shoots")
-            .delete()
-            .eq("user_id", value: userId)
-            .execute()
-        
-        // Delete from media_assets table (assuming media_assets have a user_id column)
-        try await client.database
-            .from("media_assets")
-            .delete()
-            .eq("user_id", value: userId)
-            .execute()
-        
-        print("User data deleted successfully")
-    }
     
     private static func presentationAnchor() async -> ASPresentationAnchor {
         await MainActor.run {
@@ -185,11 +167,26 @@ final class AuthViewModel: ObservableObject {
 // MARK: - Auth Errors
 enum AuthError: Error, LocalizedError {
     case noCurrentUser
+    case userNotFound
+    case emailNotConfirmed
+    case genericSignInError
+    case accountDeletionIncomplete
+    case sessionMissing
     
     var errorDescription: String? {
         switch self {
         case .noCurrentUser:
             return "No current user found. Please sign in again."
+        case .userNotFound:
+            return "Account not found. Would you like to create a new account?"
+        case .emailNotConfirmed:
+            return "Please check your inbox and confirm your email address before signing in."
+        case .genericSignInError:
+            return "Sign in failed. Please check your credentials and try again."
+        case .accountDeletionIncomplete:
+            return "Account deletion was partially completed. Your local data has been deleted, but you may need to contact support to fully remove your account."
+        case .sessionMissing:
+            return "No active session found. Please sign in again before deleting your account."
         }
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct ProfileView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -7,6 +8,8 @@ struct ProfileView: View {
     @State private var isDeletingAccount = false
     @State private var showDeleteErrorAlert = false
     @State private var deleteErrorMessage = ""
+    
+    let dataManager: DataManager
     
     var body: some View {
         NavigationStack {
@@ -24,7 +27,11 @@ struct ProfileView: View {
             .navigationTitle("My Account")
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
-                if !isAuthenticated { dismiss() }
+                print("ProfileView: Authentication state changed to: \(isAuthenticated)")
+                if !isAuthenticated { 
+                    print("ProfileView: User is no longer authenticated, dismissing...")
+                    dismiss() 
+                }
             }
             .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -46,16 +53,26 @@ struct ProfileView: View {
     
     // MARK: - Actions
     private func deleteAccount() async {
+        print("ProfileView: deleteAccount() function started")
+        
         await MainActor.run {
             isDeletingAccount = true
         }
         
         do {
             print("ProfileView: Starting account deletion...")
+            
+            // First, delete all local data using SwiftData
+            print("ProfileView: Deleting local data...")
+            await deleteAllLocalData()
+            
+            // Then delete the Supabase account
+            print("ProfileView: Calling authViewModel.deleteAccount()...")
             try await authViewModel.deleteAccount()
             print("ProfileView: Account deletion successful")
             
             await MainActor.run {
+                print("ProfileView: Setting isDeletingAccount to false and dismissing...")
                 isDeletingAccount = false
                 dismiss()
             }
@@ -67,6 +84,18 @@ struct ProfileView: View {
                 deleteErrorMessage = error.localizedDescription
                 showDeleteErrorAlert = true
             }
+        }
+    }
+    
+    private func deleteAllLocalData() async {
+        print("ProfileView: Deleting all local data...")
+        
+        do {
+            try dataManager.deleteAllData()
+            print("ProfileView: All local data deleted successfully")
+        } catch {
+            print("ProfileView: Failed to delete local data: \(error)")
+            // Continue with account deletion even if local data deletion fails
         }
     }
     
@@ -145,6 +174,7 @@ struct ProfileView: View {
             .frame(height: 54)
             
             Button(role: .destructive) {
+                print("ProfileView: Delete button tapped. Calling viewModel.deleteAccount()...")
                 showDeleteAccountAlert = true
             } label: {
                 HStack {
@@ -173,7 +203,9 @@ struct ProfileView: View {
 }
 
 #Preview {
-    ProfileView().environmentObject(AuthViewModel())
+    let modelContext = ModelContext(try! ModelContainer(for: Shoot.self, MediaAsset.self))
+    let dataManager = DataManager(modelContext: modelContext)
+    ProfileView(dataManager: dataManager).environmentObject(AuthViewModel())
 }
 
 

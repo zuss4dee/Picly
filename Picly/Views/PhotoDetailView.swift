@@ -36,9 +36,22 @@ struct PhotoDetailView: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .clipped()
+            .ignoresSafeArea(.container, edges: .horizontal)
+            .background(Color.black)
             .onChange(of: currentTabIndex) { _, newIndex in
+                // Load current image and adjacent images for smooth swiping
                 Task {
+                    // Add a small delay to prevent interference with swiping
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                     await loadImageForIndex(newIndex)
+                    // Preload adjacent images for smoother swiping
+                    if newIndex > 0 {
+                        await loadImageForIndex(newIndex - 1)
+                    }
+                    if newIndex < assets.count - 1 {
+                        await loadImageForIndex(newIndex + 1)
+                    }
                 }
             }
         }
@@ -95,19 +108,22 @@ struct PhotoDetailView: View {
     
     @ViewBuilder
     private func photoContentView(for asset: MediaAsset, at index: Int) -> some View {
-        Group {
-            if let image = fullImages[index] {
-                ZoomableImageView(image: image)
-                    .transition(.opacity)
-            } else if let placeholder = placeholderImageForAsset(asset) {
-                Image(uiImage: placeholder)
-                    .resizable()
-                    .scaledToFit()
-                    .opacity(0.85)
-            } else {
-                ProgressView()
-                    .tint(.white)
+        GeometryReader { geometry in
+            Group {
+                if let image = fullImages[index] {
+                    ZoomableImageView(image: image)
+                } else if let placeholder = placeholderImageForAsset(asset) {
+                    Image(uiImage: placeholder)
+                        .resizable()
+                        .scaledToFit()
+                        .opacity(0.85)
+                } else {
+                    ProgressView()
+                        .tint(.white)
+                }
             }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipped()
         }
     }
     
@@ -125,23 +141,34 @@ struct PhotoDetailView: View {
         let asset = assets[index]
         let path = asset.localFilePath
         
-        do {
-            let url = URL(fileURLWithPath: path)
-            let data = try Data(contentsOf: url, options: [.mappedIfSafe])
-            if let image = UIImage(data: data) {
-                print("📸 Loaded full resolution image: \(image.size.width)x\(image.size.height) for asset \(index)")
+        // For videos, use the thumbnail data instead of trying to load the video file
+        if asset.isVideo {
+            if let thumbnailData = asset.thumbnailData,
+               let thumbnailImage = UIImage(data: thumbnailData) {
+                print("🎥 Loaded video thumbnail: \(thumbnailImage.size.width)x\(thumbnailImage.size.height) for asset \(index)")
                 await MainActor.run {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    // Remove animation to prevent interference with swiping
+                    self.fullImages[index] = thumbnailImage
+                }
+            }
+        } else {
+            // For photos, load the full resolution image
+            do {
+                let url = URL(fileURLWithPath: path)
+                let data = try Data(contentsOf: url, options: [.mappedIfSafe])
+                if let image = UIImage(data: data) {
+                    print("📸 Loaded full resolution image: \(image.size.width)x\(image.size.height) for asset \(index)")
+                    await MainActor.run {
+                        // Remove animation to prevent interference with swiping
                         self.fullImages[index] = image
                     }
                 }
-            }
-        } catch {
-            // Fallback to direct file loading
-            if let image = UIImage(contentsOfFile: path) {
-                print("📸 Loaded full resolution image (fallback): \(image.size.width)x\(image.size.height) for asset \(index)")
-                await MainActor.run {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+            } catch {
+                // Fallback to direct file loading
+                if let image = UIImage(contentsOfFile: path) {
+                    print("📸 Loaded full resolution image (fallback): \(image.size.width)x\(image.size.height) for asset \(index)")
+                    await MainActor.run {
+                        // Remove animation to prevent interference with swiping
                         self.fullImages[index] = image
                     }
                 }

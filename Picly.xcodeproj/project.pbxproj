@@ -102,6 +102,9 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
+				KnownAssetTags = (
+					New,
+				);
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
@@ -278,12 +281,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Picly/Picly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = J9G532HF4B;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Picly/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Picly;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Picly needs camera access to capture photos directly into your Shoot.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Picly needs microphone access to record audio while capturing video.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Picly needs permission to save exported photos and videos to your Photos library.";
@@ -323,12 +328,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Picly/Picly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = J9G532HF4B;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Picly/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Picly;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Picly needs camera access to capture photos directly into your Shoot.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Picly needs microphone access to record audio while capturing video.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Picly needs permission to save exported photos and videos to your Photos library.";

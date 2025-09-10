@@ -11,36 +11,33 @@ struct AuthView: View {
     @State private var errorMessage: String?
     @State private var showConfirmationAlert: Bool = false
     @State private var isSignUpMode: Bool = false
+    @State private var showSignUpPrompt: Bool = false
     
     var body: some View {
         ZStack {
-            // Dark background
-            Color.black
+            // Light background
+            Color(.systemGroupedBackground)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 Spacer()
                 
-                // Logo/Avatar
-                Circle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 80, height: 80)
-                    .overlay(
-                        Text("A")
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundColor(.white)
-                    )
+                // Logo
+                Image("PiclyLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
                     .padding(.bottom, 24)
                 
                 // Welcome text
                 Text("Welcome back")
                     .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                     .padding(.bottom, 8)
                 
                 Text("Sign in to your account to continue")
                     .font(.system(size: 16))
-                    .foregroundColor(.gray)
+                    .foregroundColor(.secondary)
                     .padding(.bottom, 40)
                 
                 // Input fields
@@ -48,7 +45,7 @@ struct AuthView: View {
                     // Email field
                     HStack(spacing: 12) {
                         Image(systemName: "envelope")
-                            .foregroundColor(.gray)
+                            .foregroundColor(.secondary)
                             .frame(width: 20)
                         
                         TextField("Email address", text: $email)
@@ -56,21 +53,21 @@ struct AuthView: View {
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                         
                         Image(systemName: "square.grid.3x3")
-                            .foregroundColor(.gray)
+                            .foregroundColor(.secondary)
                             .frame(width: 20)
                     }
                     .padding(.horizontal, 16)
                     .frame(height: 50)
-                    .background(Color.white)
+                    .background(Color(.systemBackground))
                     .cornerRadius(12)
                     
                     // Password field
                     HStack(spacing: 12) {
                         Image(systemName: "lock")
-                            .foregroundColor(.gray)
+                            .foregroundColor(.secondary)
                             .frame(width: 20)
                         
                         Group {
@@ -80,42 +77,42 @@ struct AuthView: View {
                                 SecureField("Password", text: $password)
                             }
                         }
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                         
                         HStack(spacing: 8) {
                             Image(systemName: "square.grid.3x3")
-                                .foregroundColor(.gray)
+                                .foregroundColor(.secondary)
                                 .frame(width: 20)
                             
                             Button(action: { isPasswordVisible.toggle() }) {
                                 Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.secondary)
                                     .frame(width: 20)
                             }
                         }
                     }
                     .padding(.horizontal, 16)
                     .frame(height: 50)
-                    .background(Color.white)
+                    .background(Color(.systemBackground))
                     .cornerRadius(12)
                     
                     // Confirm password field (only in sign up mode)
                     if isSignUpMode {
                         HStack(spacing: 12) {
                             Image(systemName: "lock")
-                                .foregroundColor(.gray)
+                                .foregroundColor(.secondary)
                                 .frame(width: 20)
                             
                             SecureField("Confirm Password", text: $confirmPassword)
-                                .foregroundColor(.black)
+                                .foregroundColor(.primary)
                             
                             Image(systemName: "square.grid.3x3")
-                                .foregroundColor(.gray)
+                                .foregroundColor(.secondary)
                                 .frame(width: 20)
                         }
                         .padding(.horizontal, 16)
                         .frame(height: 50)
-                        .background(Color.white)
+                        .background(Color(.systemBackground))
                         .cornerRadius(12)
                     }
                 }
@@ -128,7 +125,7 @@ struct AuthView: View {
                         // Handle forgot password
                     }
                     .font(.system(size: 14))
-                    .foregroundColor(.gray)
+                    .foregroundColor(.secondary)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
@@ -155,7 +152,7 @@ struct AuthView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(Color.black)
+                    .background(Color.primary)
                     .foregroundColor(.white)
                     .cornerRadius(12)
                 }
@@ -166,16 +163,16 @@ struct AuthView: View {
                 // Divider
                 HStack {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(Color.secondary.opacity(0.3))
                         .frame(height: 1)
                     
                     Text("or")
                         .font(.system(size: 14))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                         .padding(.horizontal, 16)
                     
                     Rectangle()
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(Color.secondary.opacity(0.3))
                         .frame(height: 1)
                 }
                 .padding(.horizontal, 24)
@@ -185,7 +182,7 @@ struct AuthView: View {
                 SignInWithAppleButton(.signIn) { _ in
                     authViewModel.signInWithApple()
                 } onCompletion: { _ in }
-                .signInWithAppleButtonStyle(.white)
+                .signInWithAppleButtonStyle(.black)
                 .frame(height: 50)
                 .cornerRadius(12)
                 .padding(.horizontal, 24)
@@ -195,7 +192,7 @@ struct AuthView: View {
                 HStack {
                     Text(isSignUpMode ? "Already have an account?" : "Don't have an account?")
                         .font(.system(size: 14))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                     
                     Button(isSignUpMode ? "Sign In" : "Sign Up") {
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -203,7 +200,7 @@ struct AuthView: View {
                         }
                     }
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 }
                 .padding(.top, 24)
                 .padding(.bottom, 40)
@@ -212,9 +209,19 @@ struct AuthView: View {
             }
         }
         .alert("Check Your Email", isPresented: $showConfirmationAlert) {
-            Button("OK", role: .cancel) {}
+            Button("OK", role: .cancel) {
+                isSignUpMode = false
+            }
         } message: {
             Text("We've sent a confirmation link to your email address.")
+        }
+        .alert("Account Not Found", isPresented: $showSignUpPrompt) {
+            Button("Cancel", role: .cancel) { }
+            Button("Sign Up") {
+                signUp()
+            }
+        } message: {
+            Text("Would you like to create a new account with this email and password?")
         }
     }
     
@@ -222,6 +229,7 @@ struct AuthView: View {
     private func signIn() {
         isSigningIn = true
         errorMessage = nil
+        showSignUpPrompt = false
         Task {
             do {
                 try await authViewModel.signIn(email: email, password: password)
@@ -229,7 +237,11 @@ struct AuthView: View {
             } catch {
                 await MainActor.run {
                     isSigningIn = false
-                    errorMessage = error.localizedDescription
+                    if let authError = error as? AuthError, authError == .userNotFound {
+                        showSignUpPrompt = true
+                    } else {
+                        errorMessage = error.localizedDescription
+                    }
                 }
             }
         }
